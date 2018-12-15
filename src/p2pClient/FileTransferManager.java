@@ -105,9 +105,9 @@ public class FileTransferManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        countDoneAcessSemaphore.acquire();
+        //countDoneAcessSemaphore.acquire();
         file[countDone++] = byteArray;
-        countDoneAcessSemaphore.release();
+        //countDoneAcessSemaphore.release();
         clientsMap.put(clienteDetails, clientsMap.get(clienteDetails) + 1);
     }
 
@@ -115,15 +115,17 @@ public class FileTransferManager {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                int i = 0;
                 while(true){
+                    i++;
                     try {
                         sleep(200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    countDoneAcessSemaphore.acquire();
+                    //countDoneAcessSemaphore.acquire();
                     Progress.getInstance().setFractionDone((float) countDone / (float) fileBlockRequestMessageArray.length);
-                    countDoneAcessSemaphore.release();
+                    //countDoneAcessSemaphore.release();
                 }
             }
         });

@@ -12,9 +12,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.List;
 
+import static java.lang.Thread.sleep;
+
 public class InterfaceGrafica extends JFrame {
+
+    private static InterfaceGrafica instance;
 
 	private JFrame frame = new JFrame("The ISCTE Bay");
 	private JTextField textField = new JTextField();
@@ -30,17 +35,21 @@ public class InterfaceGrafica extends JFrame {
 	private JProgressBar jProgressBar = new JProgressBar(0, 100);
 
     public InterfaceGrafica() {
+        instance = this;
 		configureFrame();
 		configureText();
         configureList();
         configureButtons();
         addListeners();
         configureProgressBar();
-        startWorkers();
 	}
 
+	public static InterfaceGrafica getInstance(){
+        return instance;
+    }
+
     private void configureFrame(){
-        this.frame.setSize(635, 450);
+        this.frame.setSize(650, 460);
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.frame.getContentPane().setLayout(null);
         this.frame.setVisible(true);
@@ -89,7 +98,7 @@ public class InterfaceGrafica extends JFrame {
             @Override
             public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
                 if ("progress".equals(propertyChangeEvent.getPropertyName())) {
-                    jProgressBar.setIndeterminate(false);
+                    System.out.println("cima " + (Integer) propertyChangeEvent.getNewValue());
                     jProgressBar.setValue((Integer) propertyChangeEvent.getNewValue());
                 }
             }
@@ -108,6 +117,7 @@ public class InterfaceGrafica extends JFrame {
 
         buttonDwonload.addActionListener(e -> {
             if(!listaFicheiros.isSelectionEmpty()){
+                startWorkers();
                 P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
             }
         });
@@ -116,6 +126,7 @@ public class InterfaceGrafica extends JFrame {
             public void keyReleased(KeyEvent ke) {
                 if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
                     if(!listaFicheiros.isSelectionEmpty()){
+                        startWorkers();
                         P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
                     }
                 }
@@ -126,6 +137,7 @@ public class InterfaceGrafica extends JFrame {
             public void mouseClicked(MouseEvent me) {
                 if (me.getClickCount() == 2) {
                     if(!listaFicheiros.isSelectionEmpty()){
+                        startWorkers();
                         P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
                     }
                 }
@@ -141,34 +153,18 @@ public class InterfaceGrafica extends JFrame {
         });
     }
 
-    class ProgressBarManager extends SwingWorker<Float, Float> {
+    class ProgressBarManager extends SwingWorker<Integer, Integer> {
 
         @Override
-        protected Float doInBackground() throws Exception {
-            Float value = null;
-            while(!Thread.currentThread().isInterrupted()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                value = Progress.getInstance().getFractionDone();
-                publish(value);
+        protected Integer doInBackground() throws Exception {
+            int value = 0;
+            while(!isCancelled() && value < 100) {
+                System.out.println("t: " + value);
+                Thread.sleep(100);
+                value = (int) (100 * Progress.getInstance().getFractionDone());
+                setProgress(value);
             }
             return value;
-        }
-
-        @Override
-        protected void process(List<Float> chunks) {
-            for (Float d : chunks) {
-                //System.out.println(d);
-                jProgressBar.setValue((int)(100*d));
-            }
-        }
-
-        @Override
-        public void done() {
-            System.out.println("Done");
         }
     }
 

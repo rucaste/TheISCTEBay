@@ -1,6 +1,5 @@
 package mainClient;
 
-import gui.InterfaceGrafica;
 import p2pClient.P2PClient;
 import p2pServer.P2PServer;
 
@@ -22,7 +21,6 @@ public class Cliente {
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, "Erro na configuração de ligações, o cliente não é capaz de partilhar ficheiro\n", "Erro", JOptionPane.ERROR_MESSAGE);
 		}
-		new InterfaceGrafica();
 	}
 
 	public static Cliente getInstance(){
@@ -44,10 +42,4 @@ public class Cliente {
 			e.printStackTrace();
 		}
 	}
-
-	// TODO apagar no final
-	public void printHashMap(){
-		System.out.println(P2PClient.getInstance().mapaDeFicheirosToString());
-	}
-
 }

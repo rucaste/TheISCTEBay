@@ -2,6 +2,7 @@ package p2pClient;
 
 import estruturas.FileDetails;
 import mainClient.Ficheiros;
+import mainClient.Progress;
 
 import javax.swing.*;
 import java.io.FileNotFoundException;
