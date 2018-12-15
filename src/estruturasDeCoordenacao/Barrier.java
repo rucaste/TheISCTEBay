@@ -21,6 +21,7 @@ public class Barrier {
         }if(passedWaiters == 0){
             notifyAll();
         }
+
         passedWaiters++;
         if(passedWaiters == nWaiters){
             passedWaiters = 0;

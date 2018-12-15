@@ -7,8 +7,6 @@ import p2pServer.P2PServer;
 import javax.swing.*;
 import java.io.IOException;
 
-import static java.lang.Thread.sleep;
-
 
 public class Cliente {
 
@@ -24,7 +22,7 @@ public class Cliente {
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, "Erro na configuração de ligações, o cliente não é capaz de partilhar ficheiro\n", "Erro", JOptionPane.ERROR_MESSAGE);
 		}
-		new InterfaceGrafica(p2pPorto);
+		new InterfaceGrafica();
 	}
 
 	public static Cliente getInstance(){

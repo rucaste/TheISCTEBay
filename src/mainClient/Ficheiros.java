@@ -62,8 +62,6 @@ public class Ficheiros {
             }
             Collections.sort(this.filesList);
         }
-        System.out.println(filesList);
-        System.out.println(filesPath);
     }
 
     @Override

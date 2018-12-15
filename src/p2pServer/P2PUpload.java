@@ -35,7 +35,7 @@ public class P2PUpload implements Runnable {
                 for (int i = 0; i < fileContents.length; i++) {
                     fileContents[i] = file.readByte();
                 }
-                ByteArray byteArray = new ByteArray(fileContents, fileBlockRequestMessage.getOffset());
+                ByteArray byteArray = new ByteArray(fileContents);
                 P2PClientHandler.getInstance().getObjectOutput().writeObject(byteArray);
                 P2PClientHandler.getInstance().getObjectOutput().flush();
             } catch (IndexOutOfBoundsException | IOException e){

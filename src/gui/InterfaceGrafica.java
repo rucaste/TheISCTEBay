@@ -8,7 +8,6 @@ import mainClient.Progress;
 import p2pClient.P2PClient;
 
 import javax.swing.*;
-import javax.xml.bind.Unmarshaller;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
@@ -17,18 +16,21 @@ import java.util.List;
 
 public class InterfaceGrafica extends JFrame {
 
-	private JFrame frame;
-	private JTextField textField;
-    private JButton buttonProcura;
-	private JButton buttonPedidoClt;
+	private JFrame frame = new JFrame("The ISCTE Bay");
+	private JTextField textField = new JTextField();
+    private JButton buttonProcura = new JButton("Procura");
+	private JButton buttonDwonload = new JButton("Download");
+    private JLabel labelPalavraChave = new JLabel("Palavra Chave:");
+    private JTextArea textArea = new JTextArea();
+
     private DefaultListModel<FileDetails> modelo = new DefaultListModel<>();
 	private JList<FileDetails> listaFicheiros;
-	private JTextArea textArea;
+    private JScrollPane jScrollPane = new JScrollPane();
 
 	private JProgressBar jProgressBar = new JProgressBar(0, 100);
 
-    public InterfaceGrafica(int porto) {
-		configureFrame(porto);
+    public InterfaceGrafica() {
+		configureFrame();
 		configureText();
         configureList();
         configureButtons();
@@ -37,8 +39,7 @@ public class InterfaceGrafica extends JFrame {
         startWorkers();
 	}
 
-    private void configureFrame(int porto){
-        this.frame = new JFrame(Integer.toString(porto));
+    private void configureFrame(){
         this.frame.setSize(635, 450);
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.frame.getContentPane().setLayout(null);
@@ -46,39 +47,31 @@ public class InterfaceGrafica extends JFrame {
     }
 
     private void configureText(){
-        JLabel labelPalavraChave = new JLabel("Palavra Chave:");
-        this.textField = new JTextField();
-
-        labelPalavraChave.setBounds(5, 5, 150, 20);
+        labelPalavraChave.setBounds(5, 5, 150, 25);
         frame.add(labelPalavraChave, BorderLayout.NORTH);
 
         frame.add(textField, BorderLayout.NORTH);
-        textField.setBounds(150, 5, 325, 20);
+        textField.setBounds(150, 5, 325, 25);
     }
 
 	private void configureList(){
         this.listaFicheiros = new JList<FileDetails>(modelo);
-        this.listaFicheiros.setBounds(5, 30, 470, 385);
-        frame.add(listaFicheiros, BorderLayout.NORTH);
+        this.jScrollPane.setViewportView(listaFicheiros);
+        this.listaFicheiros.setLayoutOrientation(JList.VERTICAL);
+        frame.add(jScrollPane, BorderLayout.NORTH);
+
+        this.jScrollPane.setBounds(5, 35, 470, 380);
     }
 
     private void configureButtons(){
-        this.buttonProcura = new JButton("Procurar");
-        this.buttonPedidoClt = new JButton("Pedido CLT");
-        JButton buttonDownload = new JButton("Descarregar");
         this.textArea = new JTextArea();
-
         frame.add(buttonProcura);
-        buttonProcura.setBounds(480, 5, 150, 20);
-        frame.add(buttonPedidoClt);
-        buttonPedidoClt.setBounds(480, 45, 150, 20);
-        frame.add(buttonDownload);
-        buttonDownload.setBounds(480, 85, 150, 20);
-
+        buttonProcura.setBounds(480, 5, 150, 40);
+        frame.add(buttonDwonload);
+        buttonDwonload.setBounds(480, 65, 150, 40);
         frame.add(textArea);
-        textArea.setBounds(480, 165, 150, 235);
+        textArea.setBounds(480, 180, 150, 230);
         textArea.setText(Ficheiros.getInstance().getF());
-
     }
 
     private void configureProgressBar(){
@@ -87,7 +80,7 @@ public class InterfaceGrafica extends JFrame {
         jProgressBar.setStringPainted(true);
 
         frame.add(jProgressBar);
-        jProgressBar.setBounds(480, 125, 150, 20);
+        jProgressBar.setBounds(480, 125, 150, 40);
     }
 
     public void startWorkers() {
@@ -107,18 +100,24 @@ public class InterfaceGrafica extends JFrame {
     private void addListeners(){
         buttonProcura.addActionListener(e -> {
             modelo.removeAllElements();
-            String nome = textField.getText();
-            Cliente.getInstance().findFiles(nome);
+            Cliente.getInstance().findFiles(textField.getText());
             for(FileDetails fd: P2PClient.getInstance().getmapaDeFicheiros()){
                 modelo.addElement(fd);
+            }
+        });
+
+        buttonDwonload.addActionListener(e -> {
+            if(!listaFicheiros.isSelectionEmpty()){
+                P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
             }
         });
 
         listaFicheiros.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent ke) {
                 if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
-                    System.out.println(listaFicheiros.getSelectedValue());
-                    P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                    if(!listaFicheiros.isSelectionEmpty()){
+                        P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                    }
                 }
             }
         });
@@ -126,14 +125,11 @@ public class InterfaceGrafica extends JFrame {
         listaFicheiros.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent me) {
                 if (me.getClickCount() == 2) {
-                    System.out.println(listaFicheiros.getSelectedValue());
-                    P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                    if(!listaFicheiros.isSelectionEmpty()){
+                        P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                    }
                 }
             }
-        });
-
-        buttonPedidoClt.addActionListener(e -> { ;
-            ClienteServidor.getInstance().sendCLT();
         });
 
         frame.addWindowListener(new WindowAdapter() {
@@ -165,7 +161,7 @@ public class InterfaceGrafica extends JFrame {
         @Override
         protected void process(List<Float> chunks) {
             for (Float d : chunks) {
-                System.out.println(d);
+                //System.out.println(d);
                 jProgressBar.setValue((int)(100*d));
             }
         }

@@ -6,7 +6,6 @@ import estruturas.FileBlockRequestMessage;
 import estruturas.FileDetails;
 import estruturasDeCoordenacao.Semaphore;
 import estruturasDeCoordenacao.SingleBarrier;
-import mainClient.Cliente;
 import mainClient.Progress;
 
 import java.util.HashMap;
@@ -18,7 +17,7 @@ import static java.lang.Thread.sleep;
 
 public class FileTransferManager {
 
-    private static final int BLOCK_SIZE = 512;
+    private static final int BLOCK_SIZE = 1024;
 
     private FileDetails fileDetails;
     private FileBlockRequestMessage[] fileBlockRequestMessageArray;
@@ -102,7 +101,7 @@ public class FileTransferManager {
 
     synchronized void addByteArray(ByteArray byteArray, ClienteDetails clienteDetails){
         try {
-            sleep((int) (Math.random()*10));
+            sleep((int) (Math.random()*100));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
