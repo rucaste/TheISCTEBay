@@ -4,8 +4,11 @@ import mainClient.Cliente;
 import mainClient.Ficheiros;
 import mainClient.Progress;
 import p2pClient.P2PClient;
+import p2pServer.P2PServer;
 
+import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 public class TheISCTEBay {
@@ -24,34 +27,38 @@ public class TheISCTEBay {
 
 		String ip = args[0];
 		int i = Integer.parseInt(args[3]);
-		String path = Paths.get("").toAbsolutePath().toString() + File.separator + "IdeaProjects" + File.separator + "TheISCTEBay" + File.separator + "cliente" + i + "Files" + File.separator;
+		String path = Paths.get("").toAbsolutePath().toString() + File.separator + "cliente" + i + "Files" + File.separator;
 		System.out.println(path);
 		int diretorioPort = Integer.parseInt(args[1]);
 		int p2pPort = Integer.parseInt(args[2]);
 
-		startFIcheiro(path);
+		startFicheiro(path);
 		startClient(i, p2pPort);
-		startClienteServidos(ip, diretorioPort);
+		startClienteServidor(ip, diretorioPort);
 		startP2PClient();
 		startProgress();
-		startGUI();
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				startGUI();
+			}
+		});
+		startP2PServer();
 	}
 
-
-
-	private static synchronized void startClient(int i, int port){
+	private static void startClient(int i, int port){
 		new Cliente(8080 + i);
 	}
 
-	private static synchronized void startFIcheiro(String path){
+	private static void startFicheiro(String path){
 		new Ficheiros(path);
 	}
 
-	private static synchronized void startClienteServidos(String ip, int port){
+	private static void startClienteServidor(String ip, int port){
 		new ClienteServidor(ip, 8080);
 	}
 
-	private static synchronized void startP2PClient(){
+	private static void startP2PClient(){
 		new P2PClient();
 	}
 
@@ -62,6 +69,17 @@ public class TheISCTEBay {
 	private static synchronized void startGUI(){
 		new InterfaceGrafica();
 	}
+
+	private static void startP2PServer() {
+		try {
+			new P2PServer();
+		} catch (
+				IOException e) {
+			JOptionPane.showMessageDialog(null, "Erro na configuração de ligações, o cliente não é capaz de partilhar ficheiros\n", "Erro", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+
 
 
 }

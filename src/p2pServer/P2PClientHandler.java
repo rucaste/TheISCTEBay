@@ -5,6 +5,7 @@ import estruturas.FileDetails;
 import estruturas.WordSearchMessage;
 import estruturasDeCoordenacao.ThreadPool;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -19,7 +20,7 @@ public class P2PClientHandler implements Runnable{
     private ObjectOutputStream objectOutput;
     private ThreadPool threadPool;
 
-    public P2PClientHandler() {
+    P2PClientHandler() {
         instance = this;
         threadPool = new ThreadPool(5);
     }
@@ -38,7 +39,7 @@ public class P2PClientHandler implements Runnable{
 
     @Override
     public void run() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 esperarPorConexao();
                 ObjectInputStream objectInput = new ObjectInputStream(socket.getInputStream());
@@ -52,13 +53,11 @@ public class P2PClientHandler implements Runnable{
                 }
 
                 else if(obj instanceof FileBlockRequestMessage){
-                    /*Thread thread = new Thread(new P2PUpload(this, (FileBlockRequestMessage)obj));
-                    thread.start();*/
                     P2PUpload p2PUpload = new P2PUpload((FileBlockRequestMessage)obj);
                     threadPool.enqueue(p2PUpload);
                 }
-            } catch (ClassNotFoundException | IOException e){
-                e.printStackTrace();
+            } catch (ClassNotFoundException ignore){} catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Erro na partilha de ficheiross\n", "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

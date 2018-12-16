@@ -15,11 +15,11 @@ public class Progress {
         return instance;
     }
 
-    public void setFractionDone(float fractionDone) {
+    public synchronized void setFractionDone(float fractionDone) {
         this.fractionDone = fractionDone;
     }
 
-    public float getFractionDone() {
+    public synchronized float getFractionDone() {
         return fractionDone;
     }
 

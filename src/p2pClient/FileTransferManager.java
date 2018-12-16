@@ -35,10 +35,26 @@ public class FileTransferManager {
         this.startTime = System.currentTimeMillis();
         this.fileDetails = fileDetails;
         this.fileBlockRequestMessageArray = new FileBlockRequestMessage[(int)Math.ceil(fileDetails.getTamanho()/BLOCK_SIZE)];
+        this.buildFileBlockRequestMessageObjects();
+        this.file = new ByteArray[this.fileBlockRequestMessageArray.length];
+        this.clientsMap = new HashMap<>();
+        this.addToMap(lista);
+        this.semaphore = new Semaphore(1);
+        this.countDoneAcessSemaphore = new Semaphore(1);
+        this.p2pDownloadCounterBarrier = new SingleBarrier(this.getNumberOfBlocks(), 1);
+        this.waitingForSaveBarrier = new SingleBarrier(1, 1);
+        this.setFractionDone();
+    }
+
+    long getStartTime(){
+        return this.startTime;
+    }
+
+    private void buildFileBlockRequestMessageObjects(){
         for(int i = 0; i< this.fileBlockRequestMessageArray.length; i++){
             int length;
             if(i < this.fileBlockRequestMessageArray.length-1){
-                 length = BLOCK_SIZE;
+                length = BLOCK_SIZE;
             }
             else {
                 if ((int)fileDetails.getTamanho() % BLOCK_SIZE == 0){
@@ -50,20 +66,6 @@ public class FileTransferManager {
             }
             this.fileBlockRequestMessageArray[i] = new FileBlockRequestMessage(fileDetails, i*BLOCK_SIZE, length);
         }
-        this.file = new ByteArray[this.fileBlockRequestMessageArray.length];
-
-        this.clientsMap = new HashMap<>();
-        this.addToMap(lista);
-
-        this.semaphore = new Semaphore(1);
-        this.countDoneAcessSemaphore = new Semaphore(1);
-        this.p2pDownloadCounterBarrier = new SingleBarrier(this.getNumberOfBlocks(), 1);
-        this.waitingForSaveBarrier = new SingleBarrier(1, 1);
-        this.setFractionDone();
-    }
-
-    long getStartTime(){
-        return this.startTime;
     }
 
     private void addToMap(List<ClienteDetails> lista){
@@ -80,11 +82,11 @@ public class FileTransferManager {
         return this.fileBlockRequestMessageArray.length;
     }
 
-    synchronized Semaphore getSemaphore(){
+    Semaphore getSemaphore(){
         return this.semaphore;
     }
 
-    synchronized SingleBarrier getP2pDownloadCounterBarrier(){
+    SingleBarrier getP2pDownloadCounterBarrier(){
         return this.p2pDownloadCounterBarrier;
     }
 
@@ -103,7 +105,7 @@ public class FileTransferManager {
         try {
             sleep((int) (Math.random()*100));
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().start();
         }
         //countDoneAcessSemaphore.acquire();
         file[countDone++] = byteArray;

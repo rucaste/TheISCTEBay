@@ -3,6 +3,7 @@ package clienteDiretorio;
 import estruturas.ClienteDetails;
 import mainClient.Cliente;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class ClienteServidor{
 
     private static ClienteServidor instance;
 
-    private static final long KEPP_ALIVE_PERIOD = 60000 * 2 /*(minutes)*/;
+    private static final long KEEP_ALIVE_PERIOD = 60000 * 2 /*(minutes)*/;
 
     private String diretorioIP;
     private int diretorioPorto;
@@ -47,7 +48,7 @@ public class ClienteServidor{
     private String receberMensagem() throws IOException {
         return in.readLine(); }
 
-    private synchronized void enviarMensagemRegistoDir(String mensagem) throws IOException {
+    private void enviarMensagemRegistoDir(String mensagem) throws IOException {
         out.println(mensagem);
         out.flush();
         keepAlive();
@@ -59,7 +60,8 @@ public class ClienteServidor{
             configurarStreams();
             enviarMensagemRegistoDir("INSC " + this.diretorioIP + " " + Cliente.getInstance().getP2pPorto());
         } catch (IOException e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Erro na ligação ao diretório, não foi possível adicionar este cliente à rede\nO Sistema vai ser encerrado\n", "Erro", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
         }
     }
 
@@ -77,7 +79,7 @@ public class ClienteServidor{
             try {
                 mensagem = receberMensagem();
             } catch (IOException e) {
-                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Não foi possivel obter informações do diretório\nRepita a pesquisa\n", "Aviso", JOptionPane.WARNING_MESSAGE);
             }
             if (mensagem.split("\\s+")[0].equals("CLT")) {
                 String ip = mensagem.split("\\s+")[1].replace(" ", "");
@@ -96,15 +98,14 @@ public class ClienteServidor{
     }
 
     private void keepAlive(){
-
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(true){
                     try {
-                        sleep(KEPP_ALIVE_PERIOD);
+                        sleep(KEEP_ALIVE_PERIOD);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().start();
                     }
                     out.println("HI");
                     out.flush();

@@ -52,7 +52,7 @@ public class Ficheiros {
         return listaDeFicheiros;
     }
 
-    private synchronized void updateFiles(){
+    private void updateFiles(){
         File[] files = new File(this.filesPath).listFiles();
         if((files != null ? files.length : 0) > 0){
             for (File file : files) {

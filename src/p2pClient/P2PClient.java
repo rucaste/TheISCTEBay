@@ -6,6 +6,7 @@ import estruturas.FileDetails;
 import estruturas.WordSearchMessage;
 import mainClient.Cliente;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -34,45 +35,38 @@ public class P2PClient {
         return this.mapaDeFicheiros;
     }
 
-    void solicitarInscritos(){
-        ClienteServidor.getInstance().sendCLT();
-    }
-
     List<ClienteDetails> getCLientesParaDownload(FileDetails fileDetails){
         return mapaDeFicheiros.get(fileDetails);
     }
 
-
-    public void transferFile(FileDetails fileDetails) {
+    public synchronized void transferFile(FileDetails fileDetails) {
         List<ClienteDetails> lista = getCLientesParaDownload(fileDetails);
         FileTransferManager fileTransferManager = new FileTransferManager(fileDetails, lista);
-        List<Runnable> p2PDownlaods= new ArrayList<>();
-        List<Thread> threadsList = new ArrayList<>();  // necessário ? encerra após p2pdownload concluir ?
-
-        System.out.println(lista);
+        List<Runnable> p2PDownloads= new ArrayList<>();
 
         for (ClienteDetails fonteParaDownload : lista) {
             P2PDownload p2PDownload = new P2PDownload(fonteParaDownload, fileTransferManager);
             Thread t = new Thread(p2PDownload, "P2PDownlaod_" + fonteParaDownload.toString());
             t.start();
-            threadsList.add(t);
-            p2PDownlaods.add(p2PDownload);
+            p2PDownloads.add(p2PDownload);
         }
 
-        SaveFile saveFile = new SaveFile(fileTransferManager, threadsList);
+        SaveFile saveFile = new SaveFile(fileTransferManager);
         new Thread(saveFile).start();
 
-        saveFile.interruptDownloadThreads(p2PDownlaods);
-
+        try {
+            saveFile.interruptDownloadThreads(p2PDownloads);
+        } catch (InterruptedException e) {
+            JOptionPane.showMessageDialog(null, "Não foi possivel gravar o ficheiro transferido\n", "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-
-    public void findFile(String nomeDoFicheiro) throws IOException, ClassNotFoundException {
+    public synchronized void findFile(String nomeDoFicheiro) throws IOException, ClassNotFoundException {
 
         WordSearchMessage wordSearchMessage = new WordSearchMessage(nomeDoFicheiro);
 
         getMapaDeFicheiros().clear();
-        solicitarInscritos();
+        ClienteServidor.getInstance().sendCLT();
         for (ClienteDetails fonte : ClienteServidor.getInstance().getClientsList()) {
             if (p2pPort != fonte.getPorto()) {
                 Socket socket = new Socket(fonte.getIP(), fonte.getPorto());
@@ -99,17 +93,6 @@ public class P2PClient {
                 }
             }
         }
-    }
-
-    // TODO apagar no final
-    public String mapaDeFicheirosToString(){
-        StringBuilder stringBuilder = new StringBuilder();
-        Iterator iterator = getMapaDeFicheiros().entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry cliente = (Map.Entry)iterator.next();
-            stringBuilder.append(cliente.getKey()).append(" = ").append(cliente.getValue()).append('\n');
-        }
-        return stringBuilder.toString();
     }
 
     public ArrayList<FileDetails> getmapaDeFicheiros(){

@@ -29,14 +29,15 @@ public class P2PDownload implements Runnable {
     public void run() {
 
         Object obj = null;
+        ObjectOutputStream objectOutput = null;
+        ObjectInputStream objectInput = null;
 
         while (!stopped){
             try {
                 this.socket = new Socket(clienteDetails.getIP(), clienteDetails.getPorto());
-                this.socket.setSoTimeout(5000);
-                ObjectOutputStream objectOutput = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream objectInput = new ObjectInputStream(socket.getInputStream());
-
+                this.socket.setSoTimeout(10000);
+                objectOutput = new ObjectOutputStream(socket.getOutputStream());
+                objectInput = new ObjectInputStream(socket.getInputStream());
                 this.fileTransferManager.getSemaphore().acquire();
                 objectOutput.writeObject(fileTransferManager.getFileBlockRequestMessage());
                 obj = objectInput.readObject();
@@ -44,16 +45,14 @@ public class P2PDownload implements Runnable {
                 this.fileTransferManager.getP2pDownloadCounterBarrier().barrierPost();
                 this.fileTransferManager.getSemaphore().release();
 
-            } catch (IOException | ClassNotFoundException e){
+            } catch (IOException | ClassNotFoundException | InterruptedException e){
                 this.fileTransferManager.getSemaphore().release();
                 this.stopped = true;
                 break;
             } finally {
                 try {
                     this.socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                } catch (IOException ignored) {}
             }
         }
         System.out.println(Thread.currentThread().getName()  + " foi parada");

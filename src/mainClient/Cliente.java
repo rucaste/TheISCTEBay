@@ -16,11 +16,6 @@ public class Cliente {
 	public Cliente(int p2pPorto) {
 		instance = this;
 		this.p2pPorto = p2pPorto;
-		try {
-			new P2PServer();
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, "Erro na configuração de ligações, o cliente não é capaz de partilhar ficheiro\n", "Erro", JOptionPane.ERROR_MESSAGE);
-		}
 	}
 
 	public static Cliente getInstance(){

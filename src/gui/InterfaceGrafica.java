@@ -14,6 +14,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static java.lang.Thread.sleep;
 
@@ -32,7 +33,7 @@ public class InterfaceGrafica extends JFrame {
 	private JList<FileDetails> listaFicheiros;
     private JScrollPane jScrollPane = new JScrollPane();
 
-	private JProgressBar jProgressBar = new JProgressBar(0, 100);
+	private JProgressBar jProgressBar;
 
     public InterfaceGrafica() {
         instance = this;
@@ -42,6 +43,7 @@ public class InterfaceGrafica extends JFrame {
         configureButtons();
         addListeners();
         configureProgressBar();
+        startWorkers();
 	}
 
 	public static InterfaceGrafica getInstance(){
@@ -93,8 +95,8 @@ public class InterfaceGrafica extends JFrame {
     }
 
     public void startWorkers() {
-        ProgressBarManager progressBarManager = new ProgressBarManager();
-        progressBarManager.addPropertyChangeListener(new PropertyChangeListener() {
+        ProgressBarManager progressBarManager = new ProgressBarManager(jProgressBar);
+        /*progressBarManager.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
                 if ("progress".equals(propertyChangeEvent.getPropertyName())) {
@@ -102,8 +104,17 @@ public class InterfaceGrafica extends JFrame {
                     jProgressBar.setValue((Integer) propertyChangeEvent.getNewValue());
                 }
             }
-        });
+        });*/
         progressBarManager.execute();
+    }
+
+    private void downloadAndUpdate(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+            }
+        }).start();
     }
 
     private void addListeners(){
@@ -117,8 +128,7 @@ public class InterfaceGrafica extends JFrame {
 
         buttonDwonload.addActionListener(e -> {
             if(!listaFicheiros.isSelectionEmpty()){
-                startWorkers();
-                P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                downloadAndUpdate();
             }
         });
 
@@ -126,8 +136,7 @@ public class InterfaceGrafica extends JFrame {
             public void keyReleased(KeyEvent ke) {
                 if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
                     if(!listaFicheiros.isSelectionEmpty()){
-                        startWorkers();
-                        P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                        downloadAndUpdate();
                     }
                 }
             }
@@ -137,8 +146,7 @@ public class InterfaceGrafica extends JFrame {
             public void mouseClicked(MouseEvent me) {
                 if (me.getClickCount() == 2) {
                     if(!listaFicheiros.isSelectionEmpty()){
-                        startWorkers();
-                        P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                        downloadAndUpdate();
                     }
                 }
             }
@@ -155,16 +163,26 @@ public class InterfaceGrafica extends JFrame {
 
     class ProgressBarManager extends SwingWorker<Integer, Integer> {
 
+        JProgressBar jProgressBar;
+
+        ProgressBarManager(JProgressBar jProgressBar){
+            this.jProgressBar = jProgressBar;
+        }
+
         @Override
         protected Integer doInBackground() throws Exception {
             int value = 0;
-            while(!isCancelled() && value < 100) {
-                System.out.println("t: " + value);
+            while(true) {
                 Thread.sleep(100);
                 value = (int) (100 * Progress.getInstance().getFractionDone());
-                setProgress(value);
+                publish(value);
+                //setProgress(value);
             }
-            return value;
+        }
+
+        protected void process(List<Integer> chunks) {
+            int i = chunks.get(chunks.size()-1);
+            jProgressBar.setValue(i);
         }
     }
 
