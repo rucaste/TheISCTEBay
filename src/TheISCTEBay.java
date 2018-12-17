@@ -13,8 +13,6 @@ import java.nio.file.Paths;
 
 public class TheISCTEBay {
 
-	private static String path;
-
 	public static void main(String[] args) {
 
 		if(args.length < 4){
@@ -26,14 +24,19 @@ public class TheISCTEBay {
 		}
 
 		String ip = args[0];
-		int i = Integer.parseInt(args[3]);
-		String path = Paths.get("").toAbsolutePath().toString() + File.separator + "cliente" + i + "Files" + File.separator;
+
+		String path = Paths.get("").toAbsolutePath().toString() + File.separator + args[3] + File.separator;
+		File directory = new File(String.valueOf(path));
+		if(!directory.exists()){
+			directory.mkdir();
+		}
+
 		System.out.println(path);
 		int diretorioPort = Integer.parseInt(args[1]);
 		int p2pPort = Integer.parseInt(args[2]);
 
 		startFicheiro(path);
-		startClient(i, p2pPort);
+		startClient(p2pPort);
 		startClienteServidor(ip, diretorioPort);
 		startP2PClient();
 		startProgress();
@@ -46,8 +49,8 @@ public class TheISCTEBay {
 		startP2PServer();
 	}
 
-	private static void startClient(int i, int port){
-		new Cliente(8080 + i);
+	private static void startClient(int port){
+		new Cliente(port);
 	}
 
 	private static void startFicheiro(String path){
@@ -55,7 +58,7 @@ public class TheISCTEBay {
 	}
 
 	private static void startClienteServidor(String ip, int port){
-		new ClienteServidor(ip, 8080);
+		new ClienteServidor(ip, port);
 	}
 
 	private static void startP2PClient(){

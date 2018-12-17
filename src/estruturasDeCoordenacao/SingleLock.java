@@ -1,10 +1,10 @@
 package estruturasDeCoordenacao;
 
-public class SingleCountSemaphore {
+public class SingleLock {
 
     private int count;
 
-    public SingleCountSemaphore(){
+    public SingleLock(){
         this.count = 1;
     }
 

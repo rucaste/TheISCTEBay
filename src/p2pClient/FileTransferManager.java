@@ -4,7 +4,7 @@ import estruturas.ByteArray;
 import estruturas.ClienteDetails;
 import estruturas.FileBlockRequestMessage;
 import estruturas.FileDetails;
-import estruturasDeCoordenacao.SingleCountSemaphore;
+import estruturasDeCoordenacao.SingleLock;
 import estruturasDeCoordenacao.SingleBarrier;
 import mainClient.Progress;
 
@@ -26,10 +26,10 @@ public class FileTransferManager {
     private int countDone = 0;
     private long startTime;
 
-    private SingleCountSemaphore singleCountSemaphore;
+    private SingleLock singleLock;
     private SingleBarrier p2pDownloadCounterBarrier;
     private SingleBarrier waitingForSaveBarrier;
-    private SingleCountSemaphore countDoneAcessSingleCountSemaphore;
+    private SingleLock countDoneAcessSingleLock;
 
     FileTransferManager(FileDetails fileDetails, List<ClienteDetails> lista){
         this.startTime = System.currentTimeMillis();
@@ -39,8 +39,8 @@ public class FileTransferManager {
         this.file = new ByteArray[this.fileBlockRequestMessageArray.length];
         this.clientsMap = new HashMap<>();
         this.addToMap(lista);
-        this.singleCountSemaphore = new SingleCountSemaphore();
-        this.countDoneAcessSingleCountSemaphore = new SingleCountSemaphore();
+        this.singleLock = new SingleLock();
+        this.countDoneAcessSingleLock = new SingleLock();
         this.p2pDownloadCounterBarrier = new SingleBarrier(this.getNumberOfBlocks(), 1);
         this.waitingForSaveBarrier = new SingleBarrier(1, 1);
         this.setFractionDone();
@@ -82,8 +82,8 @@ public class FileTransferManager {
         return this.fileBlockRequestMessageArray.length;
     }
 
-    SingleCountSemaphore getSingleCountSemaphore(){
-        return this.singleCountSemaphore;
+    SingleLock getSingleLock(){
+        return this.singleLock;
     }
 
     SingleBarrier getP2pDownloadCounterBarrier(){
@@ -103,13 +103,13 @@ public class FileTransferManager {
 
     synchronized void addByteArray(ByteArray byteArray, ClienteDetails clienteDetails){
         try {
-            sleep((int) (Math.random()*50));
+            sleep((int) (Math.random()*20));
         } catch (InterruptedException e) {
-            Thread.currentThread().start();
+            e.printStackTrace();
         }
-        //countDoneAcessSingleCountSemaphore.acquire();
+        //countDoneAcessSingleLock.acquire();
         file[countDone++] = byteArray;
-        //countDoneAcessSingleCountSemaphore.release();
+        //countDoneAcessSingleLock.release();
         clientsMap.put(clienteDetails, clientsMap.get(clienteDetails) + 1);
     }
 
@@ -123,9 +123,9 @@ public class FileTransferManager {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    //countDoneAcessSingleCountSemaphore.acquire();
+                    //countDoneAcessSingleLock.acquire();
                     Progress.getInstance().setFractionDone((float) countDone / (float) fileBlockRequestMessageArray.length);
-                    //countDoneAcessSingleCountSemaphore.release();
+                    //countDoneAcessSingleLock.release();
                 }
             }
         });

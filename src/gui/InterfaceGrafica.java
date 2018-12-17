@@ -2,7 +2,7 @@ package gui;
 
 import clienteDiretorio.ClienteServidor;
 import estruturas.FileDetails;
-import estruturasDeCoordenacao.SingleCountSemaphore;
+import estruturasDeCoordenacao.SingleLock;
 import mainClient.Cliente;
 import mainClient.Ficheiros;
 import mainClient.Progress;
@@ -34,7 +34,7 @@ public class InterfaceGrafica extends JFrame {
 
 	private JProgressBar jProgressBar;
 
-	private SingleCountSemaphore singleCountSemaphore = new SingleCountSemaphore();
+	private SingleLock singleLock = new SingleLock();
 
     public InterfaceGrafica() {
         instance = this;
@@ -106,23 +106,14 @@ public class InterfaceGrafica extends JFrame {
 
     public void startWorkers() {
         ProgressBarManager progressBarManager = new ProgressBarManager(jProgressBar);
-        /*progressBarManager.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                if ("progress".equals(propertyChangeEvent.getPropertyName())) {
-                    System.out.println("cima " + (Integer) propertyChangeEvent.getNewValue());
-                    jProgressBar.setValue((Integer) propertyChangeEvent.getNewValue());
-                }
-            }
-        });*/
         progressBarManager.execute();
     }
 
     private void downloadAndUpdate(){
         try {
-            singleCountSemaphore.acquire();
+            singleLock.acquire();
         } catch (InterruptedException e) {
-            singleCountSemaphore.release();
+            singleLock.release();
         }
         new Thread(new Runnable() {
             @Override
@@ -130,7 +121,7 @@ public class InterfaceGrafica extends JFrame {
                 FileDetails fileDetails = listaFicheiros.getSelectedValue();
                 P2PClient.getInstance().transferFile(fileDetails);
                 modeloAux.addElement(fileDetails);
-                singleCountSemaphore.release();
+                singleLock.release();
             }
         }).start();
 
@@ -195,7 +186,6 @@ public class InterfaceGrafica extends JFrame {
                 Thread.sleep(100);
                 value = (int) (100 * Progress.getInstance().getFractionDone());
                 publish(value);
-                //setProgress(value);
             }
         }
 

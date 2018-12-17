@@ -62,8 +62,10 @@ public class SaveFile implements Runnable{
             this.fileTransferManager.getP2pDownloadCounterBarrier().barrierWait();
             this.fileTransferManager.getWaitingForSaveBarrier().barrierPost();
             save(this.fileTransferManager.getFile());
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Não foi possivel gravar o ficheiro transferido\n", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         String tempo = "Tempo decorrido:" + (System.currentTimeMillis()- start)/1000 + "s\n";
         JOptionPane.showMessageDialog(null, this.fileTransferManager.getFinalMessage() + tempo, "Download concluído", JOptionPane.INFORMATION_MESSAGE);

@@ -1,27 +1,27 @@
 package estruturasDeCoordenacao;
 
-
 import java.util.LinkedList;
+
 
 public class ThreadPool {
 
-    private Worker[] threads;
-    private LinkedList<Runnable> taskQueue;
+    private Worker[] workers;
+    private LinkedList<Runnable> queue;
 
     public ThreadPool(int numberOfThreads){
-        taskQueue = new LinkedList<Runnable>();
-        threads = new Worker[numberOfThreads];
+        queue = new LinkedList<Runnable>();
+        workers = new Worker[numberOfThreads];
 
-        for(int i = 0; i < threads.length; i++){
-            threads[i] = new Worker();
-            threads[i].start();
+        for(int i = 0; i < workers.length; i++){
+            workers[i] = new Worker();
+            workers[i].start();
         }
     }
 
     public void enqueue(Runnable runnable) {
-        synchronized (taskQueue) {
-            taskQueue.addLast(runnable);
-            taskQueue.notify();
+        synchronized (queue) {
+            queue.addLast(runnable);
+            queue.notify();
         }
     }
 
@@ -30,15 +30,15 @@ public class ThreadPool {
         public void run() {
             Runnable runnable;
             while(true){
-                synchronized (taskQueue) {
-                    while(taskQueue.isEmpty()){
+                synchronized (queue) {
+                    while(queue.isEmpty()){
                         try {
-                            taskQueue.wait();
+                            queue.wait();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
-                    runnable = (Runnable) taskQueue.removeFirst();
+                    runnable = (Runnable) queue.removeFirst();
                 }
                 runnable.run();
             }

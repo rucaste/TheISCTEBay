@@ -1,7 +1,7 @@
 package mainClient;
 
 import estruturas.FileDetails;
-import estruturasDeCoordenacao.SingleCountSemaphore;
+import estruturasDeCoordenacao.SingleLock;
 
 import java.io.File;
 import java.util.*;
@@ -14,7 +14,7 @@ public class Ficheiros {
     private List<FileDetails> filesList = new ArrayList<>();
     private String filesPath;
 
-    private Map<FileDetails, SingleCountSemaphore> semaphoreMap = new HashMap<>();
+    private Map<FileDetails, SingleLock> lockMap = new HashMap<>();
 
     public Ficheiros(String filesPath){
         instance = this;
@@ -55,15 +55,15 @@ public class Ficheiros {
                 if (file.isFile()) {
                     FileDetails fileDetails = new FileDetails(file.getName(), file.length());
                     this.filesList.add(fileDetails);
-                    this.semaphoreMap.put(fileDetails, new SingleCountSemaphore());
+                    this.lockMap.put(fileDetails, new SingleLock());
                 }
             }
             Collections.sort(this.filesList);
         }
     }
 
-    public SingleCountSemaphore getSemaphore(FileDetails fileDetails){
-        for (Map.Entry<FileDetails, SingleCountSemaphore> entry : this.semaphoreMap.entrySet()){
+    public SingleLock getLock(FileDetails fileDetails){
+        for (Map.Entry<FileDetails, SingleLock> entry : this.lockMap.entrySet()){
             FileDetails fileDetailsMap = entry.getKey();
             if(fileDetailsMap.getNome().equals(fileDetails.getNome())){
                 return entry.getValue();

@@ -2,7 +2,7 @@ package p2pServer;
 
 import estruturas.ByteArray;
 import estruturas.FileBlockRequestMessage;
-import estruturasDeCoordenacao.SingleCountSemaphore;
+import estruturasDeCoordenacao.SingleLock;
 import mainClient.Ficheiros;
 
 import java.io.FileNotFoundException;
@@ -23,13 +23,13 @@ public class P2PUpload implements Runnable {
         String name = fileBlockRequestMessage.getFileDetails().getNome();
         String path = Ficheiros.getInstance().getFilesPath() + "/" + name;
         RandomAccessFile file = null;
-        SingleCountSemaphore semaphore = Ficheiros.getInstance().getSemaphore(fileBlockRequestMessage.getFileDetails());
+        SingleLock lock = Ficheiros.getInstance().getLock(fileBlockRequestMessage.getFileDetails());
 
         try {
-            semaphore.acquire();
+            lock.acquire();
             file = new RandomAccessFile(path, "r");
         } catch (FileNotFoundException | InterruptedException e) {
-            semaphore.release();
+            lock.release();
         }
 
         byte[] fileContents = new byte[fileBlockRequestMessage.getLength()];
@@ -38,12 +38,12 @@ public class P2PUpload implements Runnable {
                 for (int i = 0; i < fileContents.length; i++) {
                     fileContents[i] = file.readByte();
                 }
-                semaphore.release();
+                lock.release();
                 ByteArray byteArray = new ByteArray(fileContents);
                 P2PClientHandler.getInstance().getObjectOutput().writeObject(byteArray);
                 P2PClientHandler.getInstance().getObjectOutput().flush();
             } catch (IndexOutOfBoundsException | IOException e){
-                semaphore.release();
+                lock.release();
             }
     }
 }

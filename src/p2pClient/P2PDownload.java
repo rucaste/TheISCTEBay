@@ -38,21 +38,23 @@ public class P2PDownload implements Runnable {
                 this.socket.setSoTimeout(10000);
                 objectOutput = new ObjectOutputStream(socket.getOutputStream());
                 objectInput = new ObjectInputStream(socket.getInputStream());
-                this.fileTransferManager.getSingleCountSemaphore().acquire();
+                this.fileTransferManager.getSingleLock().acquire();
                 objectOutput.writeObject(fileTransferManager.getFileBlockRequestMessage());
 
                 obj = objectInput.readObject();
                 fileTransferManager.addByteArray((ByteArray)obj, clienteDetails);
                 this.fileTransferManager.getP2pDownloadCounterBarrier().barrierPost();
-                this.fileTransferManager.getSingleCountSemaphore().release();
+                this.fileTransferManager.getSingleLock().release();
 
-            } catch (IOException | ClassNotFoundException | InterruptedException e){
-                this.fileTransferManager.getSingleCountSemaphore().release();
+            } catch (IOException | ClassNotFoundException e){
+                this.fileTransferManager.getSingleLock().release();
                 this.stopped = true;
                 break;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
-        System.out.println(Thread.currentThread().getName()  + " foi parada");
+        //System.out.println(Thread.currentThread().getName()  + " foi parada");
     }
 
 }
