@@ -1,7 +1,7 @@
 package mainClient;
 
+import clienteDiretorio.ClienteServidor;
 import p2pClient.P2PClient;
-import p2pServer.P2PServer;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -27,11 +27,18 @@ public class Cliente {
     }
 
 	public void findFiles(String fileSubString){
+		int i = 0;
 		try {
 			try {
 				P2PClient.getInstance().findFile(fileSubString);
 			} catch (IOException e) {
-				JOptionPane.showMessageDialog(null, "Erro na ligação ao fornecedor do ficheiro\n", "Erro", JOptionPane.ERROR_MESSAGE);
+				i++;
+				if(i == 5){
+					JOptionPane.showMessageDialog(null, "Problemas na ligação aos restantes cliente\nO programa vai ser encerrado", "Erro", JOptionPane.ERROR_MESSAGE);
+					System.exit(1);
+				}
+				ClienteServidor.getInstance().sendCLT();
+				findFiles(fileSubString);
 			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();

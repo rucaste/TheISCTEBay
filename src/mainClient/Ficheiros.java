@@ -1,24 +1,24 @@
 package mainClient;
 
 import estruturas.FileDetails;
+import estruturasDeCoordenacao.SingleCountSemaphore;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 
 public class Ficheiros {
 
     private static Ficheiros instance;
 
-    private List<FileDetails> filesList;
+    private List<FileDetails> filesList = new ArrayList<>();
     private String filesPath;
+
+    private Map<FileDetails, SingleCountSemaphore> semaphoreMap = new HashMap<>();
 
     public Ficheiros(String filesPath){
         instance = this;
         this.filesPath = filesPath;
-        this.filesList = new ArrayList<>();
         updateFiles();
     }
 
@@ -30,12 +30,8 @@ public class Ficheiros {
         return filesPath;
     }
 
-    public String getF(){
-        StringBuilder stringBuilder = new StringBuilder();
-        for(FileDetails fileDetails: this.filesList){
-            stringBuilder.append(fileDetails.toString()).append("\n");
-        }
-        return stringBuilder.toString();
+    public List<FileDetails> getF(){
+        return this.filesList;
     }
 
     public void addFile(FileDetails fileDetails){
@@ -52,16 +48,28 @@ public class Ficheiros {
         return listaDeFicheiros;
     }
 
-    private void updateFiles(){
+    synchronized private void updateFiles(){
         File[] files = new File(this.filesPath).listFiles();
         if((files != null ? files.length : 0) > 0){
             for (File file : files) {
                 if (file.isFile()) {
-                    this.filesList.add(new FileDetails(file.getName(), file.length()));
+                    FileDetails fileDetails = new FileDetails(file.getName(), file.length());
+                    this.filesList.add(fileDetails);
+                    this.semaphoreMap.put(fileDetails, new SingleCountSemaphore());
                 }
             }
             Collections.sort(this.filesList);
         }
+    }
+
+    public SingleCountSemaphore getSemaphore(FileDetails fileDetails){
+        for (Map.Entry<FileDetails, SingleCountSemaphore> entry : this.semaphoreMap.entrySet()){
+            FileDetails fileDetailsMap = entry.getKey();
+            if(fileDetailsMap.getNome().equals(fileDetails.getNome())){
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -73,5 +81,4 @@ public class Ficheiros {
         }
         return stringBuilder.toString();
     }
-
 }

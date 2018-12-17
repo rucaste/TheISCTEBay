@@ -10,12 +10,16 @@
       <w>configuração</w>
       <w>decorrido</w>
       <w>diretorio</w>
+      <w>encerrado</w>
       <w>enviar</w>
       <w>erro</w>
       <w>esperar</w>
       <w>ficheiro</w>
       <w>ficheiros</w>
+      <w>ficheiross</w>
+      <w>fonte</w>
       <w>fornecedor</w>
+      <w>gravar</w>
       <w>insc</w>
       <w>ligacao</w>
       <w>ligação</w>
@@ -24,14 +28,23 @@
       <w>mapa</w>
       <w>mensagem</w>
       <w>modelo</w>
+      <w>operação</w>
       <w>outros</w>
       <w>parada</w>
+      <w>partilha</w>
       <w>partilhar</w>
       <w>pedido</w>
+      <w>possível</w>
+      <w>problemas</w>
       <w>procura</w>
+      <w>programa</w>
       <w>receber</w>
       <w>registo</w>
+      <w>repita</w>
+      <w>resposta</w>
+      <w>restantes</w>
       <w>servidor</w>
+      <w>transferido</w>
     </words>
   </dictionary>
 </component>

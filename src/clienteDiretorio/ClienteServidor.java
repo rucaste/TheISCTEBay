@@ -61,6 +61,7 @@ public class ClienteServidor{
             enviarMensagemRegistoDir("INSC " + this.diretorioIP + " " + Cliente.getInstance().getP2pPorto());
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Erro na ligação ao diretório, não foi possível adicionar este cliente à rede\nO Sistema vai ser encerrado\n", "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
             System.exit(1);
         }
     }
@@ -80,6 +81,7 @@ public class ClienteServidor{
                 mensagem = receberMensagem();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Não foi possivel obter informações do diretório\nRepita a pesquisa\n", "Aviso", JOptionPane.WARNING_MESSAGE);
+                e.printStackTrace();
             }
             if (mensagem.split("\\s+")[0].equals("CLT")) {
                 String ip = mensagem.split("\\s+")[1].replace(" ", "");

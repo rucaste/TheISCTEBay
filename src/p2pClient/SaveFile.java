@@ -25,7 +25,7 @@ public class SaveFile implements Runnable{
         try {
             this.fileOutputStream = new FileOutputStream(Ficheiros.getInstance().getFilesPath() + "/" + this.fileDetails.getNome());
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "Não foi possivel gravar o ficheiro transferido\n", "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Não foi possível gravar o ficheiro transferido\nRepita a operação", "Erro", JOptionPane.ERROR_MESSAGE);
         }
         this.fileArray = new byte[(int)fileDetails.getTamanho()];
         this.count = (int)fileDetails.getTamanho();
@@ -41,11 +41,15 @@ public class SaveFile implements Runnable{
 
     private void writeFile() throws IOException {
         this.fileOutputStream.write(this.fileArray);
+        this.fileOutputStream.flush();
         Ficheiros.getInstance().addFile(this.fileDetails);
     }
 
-    void interruptDownloadThreads(List<Runnable> p2PDownloadsList) throws InterruptedException {
+    void interruptDownloadThreads(List<Runnable> p2PDownloadsList, List<Thread> threadList) throws InterruptedException {
         this.fileTransferManager.getWaitingForSaveBarrier().barrierWait();
+        for(Thread thread: threadList){
+            thread.interrupt();
+        }
         for(Runnable p2PDownloads: p2PDownloadsList){
             ((P2PDownload)p2PDownloads).stopThread();
         }

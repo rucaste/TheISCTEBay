@@ -43,11 +43,13 @@ public class P2PClient {
         List<ClienteDetails> lista = getCLientesParaDownload(fileDetails);
         FileTransferManager fileTransferManager = new FileTransferManager(fileDetails, lista);
         List<Runnable> p2PDownloads= new ArrayList<>();
+        List<Thread> threadList = new ArrayList<>();
 
         for (ClienteDetails fonteParaDownload : lista) {
             P2PDownload p2PDownload = new P2PDownload(fonteParaDownload, fileTransferManager);
-            Thread t = new Thread(p2PDownload, "P2PDownlaod_" + fonteParaDownload.toString());
+            Thread t = new Thread(p2PDownload, "P2PDownload_" + fonteParaDownload.toString());
             t.start();
+            threadList.add(t);
             p2PDownloads.add(p2PDownload);
         }
 
@@ -55,9 +57,9 @@ public class P2PClient {
         new Thread(saveFile).start();
 
         try {
-            saveFile.interruptDownloadThreads(p2PDownloads);
+            saveFile.interruptDownloadThreads(p2PDownloads, threadList);
         } catch (InterruptedException e) {
-            JOptionPane.showMessageDialog(null, "Não foi possivel gravar o ficheiro transferido\n", "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
@@ -73,6 +75,7 @@ public class P2PClient {
                 ObjectOutputStream objectOutput = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream objectInput = new ObjectInputStream(socket.getInputStream());
                 objectOutput.writeObject(wordSearchMessage);
+
                 List resposta = (List) objectInput.readObject();
 
                 for (Object ficheiro: resposta){

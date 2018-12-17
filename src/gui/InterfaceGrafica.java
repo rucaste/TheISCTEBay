@@ -2,6 +2,7 @@ package gui;
 
 import clienteDiretorio.ClienteServidor;
 import estruturas.FileDetails;
+import estruturasDeCoordenacao.SingleCountSemaphore;
 import mainClient.Cliente;
 import mainClient.Ficheiros;
 import mainClient.Progress;
@@ -10,13 +11,8 @@ import p2pClient.P2PClient;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import static java.lang.Thread.sleep;
 
 public class InterfaceGrafica extends JFrame {
 
@@ -27,13 +23,18 @@ public class InterfaceGrafica extends JFrame {
     private JButton buttonProcura = new JButton("Procura");
 	private JButton buttonDwonload = new JButton("Download");
     private JLabel labelPalavraChave = new JLabel("Palavra Chave:");
-    private JTextArea textArea = new JTextArea();
+
+    private DefaultListModel<FileDetails> modeloAux = new DefaultListModel<>();
+    private JList<FileDetails> jListAux;
+    private JScrollPane jScrollPaneAux = new JScrollPane();
 
     private DefaultListModel<FileDetails> modelo = new DefaultListModel<>();
 	private JList<FileDetails> listaFicheiros;
     private JScrollPane jScrollPane = new JScrollPane();
 
 	private JProgressBar jProgressBar;
+
+	private SingleCountSemaphore singleCountSemaphore = new SingleCountSemaphore();
 
     public InterfaceGrafica() {
         instance = this;
@@ -70,19 +71,28 @@ public class InterfaceGrafica extends JFrame {
         this.jScrollPane.setViewportView(listaFicheiros);
         this.listaFicheiros.setLayoutOrientation(JList.VERTICAL);
         frame.add(jScrollPane, BorderLayout.NORTH);
-
         this.jScrollPane.setBounds(5, 35, 470, 380);
+
+        this.jListAux = new JList<FileDetails>(modeloAux);
+        this.jScrollPaneAux.setViewportView(jListAux);
+        this.jListAux.setLayoutOrientation(JList.VERTICAL);
+        frame.add(jScrollPaneAux, BorderLayout.NORTH);
+
+        this.jScrollPaneAux.setBounds(480, 180, 150, 230);
+        updateJList2();
+    }
+
+    private void updateJList2(){
+        for(FileDetails fd: Ficheiros.getInstance().getF()){
+            modeloAux.addElement(fd);
+        }
     }
 
     private void configureButtons(){
-        this.textArea = new JTextArea();
         frame.add(buttonProcura);
         buttonProcura.setBounds(480, 5, 150, 40);
         frame.add(buttonDwonload);
         buttonDwonload.setBounds(480, 65, 150, 40);
-        frame.add(textArea);
-        textArea.setBounds(480, 180, 150, 230);
-        textArea.setText(Ficheiros.getInstance().getF());
     }
 
     private void configureProgressBar(){
@@ -109,12 +119,21 @@ public class InterfaceGrafica extends JFrame {
     }
 
     private void downloadAndUpdate(){
+        try {
+            singleCountSemaphore.acquire();
+        } catch (InterruptedException e) {
+            singleCountSemaphore.release();
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
-                P2PClient.getInstance().transferFile(listaFicheiros.getSelectedValue());
+                FileDetails fileDetails = listaFicheiros.getSelectedValue();
+                P2PClient.getInstance().transferFile(fileDetails);
+                modeloAux.addElement(fileDetails);
+                singleCountSemaphore.release();
             }
         }).start();
+
     }
 
     private void addListeners(){
@@ -180,6 +199,7 @@ public class InterfaceGrafica extends JFrame {
             }
         }
 
+        @Override
         protected void process(List<Integer> chunks) {
             int i = chunks.get(chunks.size()-1);
             jProgressBar.setValue(i);

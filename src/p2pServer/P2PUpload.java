@@ -2,9 +2,9 @@ package p2pServer;
 
 import estruturas.ByteArray;
 import estruturas.FileBlockRequestMessage;
+import estruturasDeCoordenacao.SingleCountSemaphore;
 import mainClient.Ficheiros;
 
-import javax.swing.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -23,11 +23,13 @@ public class P2PUpload implements Runnable {
         String name = fileBlockRequestMessage.getFileDetails().getNome();
         String path = Ficheiros.getInstance().getFilesPath() + "/" + name;
         RandomAccessFile file = null;
+        SingleCountSemaphore semaphore = Ficheiros.getInstance().getSemaphore(fileBlockRequestMessage.getFileDetails());
 
         try {
-            file = new RandomAccessFile(path, "rw");
-        } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "Erro na partilha de ficheiross\n", "Erro", JOptionPane.ERROR_MESSAGE);
+            semaphore.acquire();
+            file = new RandomAccessFile(path, "r");
+        } catch (FileNotFoundException | InterruptedException e) {
+            semaphore.release();
         }
 
         byte[] fileContents = new byte[fileBlockRequestMessage.getLength()];
@@ -36,11 +38,12 @@ public class P2PUpload implements Runnable {
                 for (int i = 0; i < fileContents.length; i++) {
                     fileContents[i] = file.readByte();
                 }
+                semaphore.release();
                 ByteArray byteArray = new ByteArray(fileContents);
                 P2PClientHandler.getInstance().getObjectOutput().writeObject(byteArray);
                 P2PClientHandler.getInstance().getObjectOutput().flush();
             } catch (IndexOutOfBoundsException | IOException e){
-                JOptionPane.showMessageDialog(null, "Erro na partilha de ficheiross\n", "Erro", JOptionPane.ERROR_MESSAGE);
+                semaphore.release();
             }
     }
 }

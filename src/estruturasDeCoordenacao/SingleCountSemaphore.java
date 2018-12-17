@@ -1,22 +1,22 @@
 package estruturasDeCoordenacao;
 
-public class Semaphore {
+public class SingleCountSemaphore {
 
     private int count;
 
-    public Semaphore(int i){
-        this.count = i;
+    public SingleCountSemaphore(){
+        this.count = 1;
     }
 
     public synchronized void acquire() throws InterruptedException {
         while(count == 0){
             wait();
         }
-        count--;
+        count = 0;
     }
 
     public synchronized void release(){
-        count++;
+        count = 1;
         notifyAll();
     }
 
